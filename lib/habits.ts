@@ -1,11 +1,13 @@
 import db from "./db";
 import { todayLocal } from "./dates";
+import { calcStreak } from "./streak";
 
 export type Habit = {
   id: number;
   name: string;
   createdAt: string;
   doneToday: boolean;
+  streak: number;
 };
 
 export function addHabit(name: string): number {
@@ -20,22 +22,31 @@ export function addHabit(name: string): number {
 }
 
 export function listHabits(today: string = todayLocal()): Habit[] {
-  const rows = db
+  const habits = db
     .prepare(
-      `SELECT
-         h.id,
-         h.name,
-         h.created_at AS createdAt,
-         EXISTS (
-           SELECT 1 FROM completions c
-           WHERE c.habit_id = h.id AND c.date = ?
-         ) AS doneToday
-       FROM habits h
-       ORDER BY h.id`
+      "SELECT id, name, created_at AS createdAt FROM habits ORDER BY id"
     )
-    .all(today) as Array<Omit<Habit, "doneToday"> & { doneToday: number }>;
+    .all() as Array<{ id: number; name: string; createdAt: string }>;
 
-  return rows.map((r) => ({ ...r, doneToday: r.doneToday === 1 }));
+  const completions = db
+    .prepare("SELECT habit_id AS habitId, date FROM completions")
+    .all() as Array<{ habitId: number; date: string }>;
+
+  const datesByHabit = new Map<number, string[]>();
+  for (const c of completions) {
+    const list = datesByHabit.get(c.habitId) ?? [];
+    list.push(c.date);
+    datesByHabit.set(c.habitId, list);
+  }
+
+  return habits.map((h) => {
+    const dates = datesByHabit.get(h.id) ?? [];
+    return {
+      ...h,
+      doneToday: dates.includes(today),
+      streak: calcStreak(dates, today),
+    };
+  });
 }
 
 export function setCompletion(

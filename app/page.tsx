@@ -25,7 +25,7 @@ export default async function Home() {
               <input type="hidden" name="habitId" value={h.id} />
               <input type="hidden" name="done" value={String(!h.doneToday)} />
               <button type="submit">{h.doneToday ? "[x]" : "[ ]"}</button>{" "}
-              {h.name}
+                {h.name} 🔥 {h.streak}
             </form>
           </li>
         ))}
