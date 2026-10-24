@@ -1,6 +1,6 @@
 import { listHabits } from "@/lib/habits";
 import { todayLocal } from "@/lib/dates";
-import { addHabitAction } from "./actions";
+import { addHabitAction, toggleDoneAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,12 @@ export default async function Home() {
       <ul>
         {habits.map((h) => (
           <li key={h.id}>
-            {h.doneToday ? "[x]" : "[ ]"} {h.name}
+            <form action={toggleDoneAction}>
+              <input type="hidden" name="habitId" value={h.id} />
+              <input type="hidden" name="done" value={String(!h.doneToday)} />
+              <button type="submit">{h.doneToday ? "[x]" : "[ ]"}</button>{" "}
+              {h.name}
+            </form>
           </li>
         ))}
       </ul>
