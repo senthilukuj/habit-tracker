@@ -8,7 +8,7 @@ export async function addHabitAction(formData: FormData) {
   const name = formData.get("name");
   if (typeof name !== "string" || name.trim() === "") return;
 
-  addHabit(name);
+  await addHabit(name);
   revalidatePath("/");
 }
 
@@ -17,6 +17,6 @@ export async function toggleDoneAction(formData: FormData) {
   const done = formData.get("done") === "true";
   if (!Number.isInteger(habitId)) return;
 
-  setCompletion(habitId, todayLocal(), done);
+  await setCompletion(habitId, todayLocal(), done);
   revalidatePath("/");
 }

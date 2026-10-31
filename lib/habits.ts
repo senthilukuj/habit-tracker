@@ -10,27 +10,35 @@ export type Habit = {
   streak: number;
 };
 
-export function addHabit(name: string): number {
+export async function addHabit(name: string): Promise<number> {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Habit name is required");
 
-  const result = db
-    .prepare("INSERT INTO habits (name, created_at) VALUES (?, ?)")
-    .run(trimmed, new Date().toISOString());
+  const result = await db.execute({
+    sql: "INSERT INTO habits (name, created_at) VALUES (?, ?)",
+    args: [trimmed, new Date().toISOString()],
+  });
 
   return Number(result.lastInsertRowid);
 }
 
-export function listHabits(today: string = todayLocal()): Habit[] {
-  const habits = db
-    .prepare(
-      "SELECT id, name, created_at AS createdAt FROM habits ORDER BY id"
-    )
-    .all() as Array<{ id: number; name: string; createdAt: string }>;
+export async function listHabits(today: string = todayLocal()): Promise<Habit[]> {
+  const habitsResult = await db.execute(
+    "SELECT id, name, created_at AS createdAt FROM habits ORDER BY id"
+  );
+  const habits = habitsResult.rows as unknown as Array<{
+    id: number;
+    name: string;
+    createdAt: string;
+  }>;
 
-  const completions = db
-    .prepare("SELECT habit_id AS habitId, date FROM completions")
-    .all() as Array<{ habitId: number; date: string }>;
+  const completionsResult = await db.execute(
+    "SELECT habit_id AS habitId, date FROM completions"
+  );
+  const completions = completionsResult.rows as unknown as Array<{
+    habitId: number;
+    date: string;
+  }>;
 
   const datesByHabit = new Map<number, string[]>();
   for (const c of completions) {
@@ -49,19 +57,20 @@ export function listHabits(today: string = todayLocal()): Habit[] {
   });
 }
 
-export function setCompletion(
+export async function setCompletion(
   habitId: number,
   date: string,
   done: boolean
-): void {
+): Promise<void> {
   if (done) {
-    db.prepare(
-      "INSERT OR IGNORE INTO completions (habit_id, date) VALUES (?, ?)"
-    ).run(habitId, date);
+    await db.execute({
+      sql: "INSERT OR IGNORE INTO completions (habit_id, date) VALUES (?, ?)",
+      args: [habitId, date],
+    });
   } else {
-    db.prepare("DELETE FROM completions WHERE habit_id = ? AND date = ?").run(
-      habitId,
-      date
-    );
+    await db.execute({
+      sql: "DELETE FROM completions WHERE habit_id = ? AND date = ?",
+      args: [habitId, date],
+    });
   }
 }

@@ -1,6 +1,6 @@
 import db from "../lib/db";
 
-const tables = db
-  .prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
-  .all();
-console.log(tables);
+const result = await db.execute(
+  "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+);
+console.log(result.rows);

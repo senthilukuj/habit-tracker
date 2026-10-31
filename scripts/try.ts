@@ -4,16 +4,16 @@ import { todayLocal } from "../lib/dates";
 const today = todayLocal();
 console.log("today:", today);
 
-const id = addHabit("Read 20 min");
+const id = await addHabit("Read 20 min");
 console.log("added habit id:", id);
 
-console.log("before ticking:", listHabits());
+console.log("before ticking:", await listHabits());
 
-setCompletion(id, today, true);
-setCompletion(id, today, true); // ticking twice should be harmless
-console.log("after ticking:", listHabits());
+await setCompletion(id, today, true);
+await setCompletion(id, today, true); // ticking twice should be harmless
+console.log("after ticking:", await listHabits());
 
-setCompletion(id, today, false);
-console.log("after unticking:", listHabits());
+await setCompletion(id, today, false);
+console.log("after unticking:", await listHabits());
 
-setCompletion(id, today, true); // leave it ticked for Step 4
+await setCompletion(id, today, true); // leave it ticked for Step 4
